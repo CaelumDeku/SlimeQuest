@@ -1,5 +1,5 @@
 local evenement = {}
-
+-- interaction dans le jeu 
 evenement.current = false
 evenement.draweve = false
 evenement.timer = 2

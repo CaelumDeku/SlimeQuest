@@ -19,6 +19,7 @@ boss.LstShoot = {}
 boss.life = 10
 boss.enterHero = false
 boss.shootDistance = 600
+-- transition ko
 boss.timerTransition = 0
 boss.timerTransitionEnd = 10
 
@@ -55,15 +56,19 @@ function boss.new(pname,pi,pX,pY)
       y = pY,
       direction = pname .. boss.DIRECTION[1],
       inMove = false,
+      -- origine deplacement 
       oX = 0,
       oY = myGame.Map.TileHEIGHT,
+      -- range deplacement 
       rX = largeur,
       rY = hauteur - myGame.Map.TileHEIGHT,
       timer = 0,
       state = myGame.StateIA.STATE,
       atkCac = false,
       atkDist = false,
+      -- dommage entrant
       damage = false,
+      -- vunerabilité
       noDamage = false,
       life = boss.life
     }
@@ -72,12 +77,13 @@ end
 function boss.update(pMap,dt)
     myGame.CurrentSprite("Witch",false,dt)
     myGame.CurrentSprite("ATKwitch",false,dt)
+    -- ralentissement de l'animation
     myGame.CurrentSprite("WitchKo",false,dt / 3)
-
+    -- parcours liste en fonction de son etat
     for i , pEnn in ipairs(boss.list) do
      boss[pEnn.state](dt,pEnn)
     end
-
+     -- mouvement de pew pew 
     for i , shoot in ipairs(boss.LstShoot) do
       if shoot.load == false then
         shoot.x = shoot.x + myGame.shoot.speed * dt * math.cos(shoot.angle)
@@ -87,11 +93,13 @@ function boss.update(pMap,dt)
           table.remove(boss.LstShoot,i)
         end
       else
+        -- chargement de pew pew
         shoot.timer = shoot.timer + dt
         if shoot.timer > 1 then
           shoot.load = false
         end
       end
+      -- pewpew touch loyd
       if boss.colhero(shoot) then
         table.remove(boss.LstShoot,i)
       end
@@ -120,12 +128,7 @@ end
 function boss.state(dt,pEnn)
 
   pEnn.timer = pEnn.timer + dt
-  -- On test si l'ennemie est volant
   
-  -- Si l'ennemie ne vole pas on met la direction d'attente
-  if pEnn.fly == false then
-    pEnn.direction = pEnn.type .. boss.DIRECTION[5]
-  end
   -- Si on atteint le temps "timer" on arrete l'attente
   if pEnn.timer >= boss.timer then
     pEnn.direction = pEnn.type .. boss.DIRECTION[math.random(1,4)]
@@ -135,6 +138,7 @@ function boss.state(dt,pEnn)
 
   if math.dist(pEnn.x,pEnn.y,myGame.hero.x,myGame.hero.y) < boss.distChase and boss.enterHero == true then
     pEnn.state = myGame.StateIA.CHASE
+    pEnn.timer = 0
   end
 
 end
@@ -191,7 +195,7 @@ function boss.chase(dt,pEnn)
    pEnn.timer = pEnn.timer + dt
 
   local angle = math.angle(pEnn.x,pEnn.y,myGame.hero.x,myGame.hero.y)
-
+   -- direction du sprite 
   if math.cos(angle) > 0 then
     pEnn.direction = pEnn.type .. boss.DIRECTION[1]
   elseif math.cos(angle) < 0 then
@@ -251,7 +255,7 @@ function boss.attack(dt,pEnn)
       if pEnn.atkCac == false then
         pEnn.x = pEnn.x + dt * boss.speed * 2 * math.cos(angle)
         pEnn.y = pEnn.y + dt * boss.speed * 2 * math.sin(angle)
-
+       -- degat cac -5pv
         if math.dist(pEnn.x,pEnn.y,myGame.hero.x,myGame.hero.y) < boss.rangeAtt then
           if myGame.hero.damageIN(5) == false then
             myGame.mySon.playSound("enemyHit")
@@ -263,7 +267,7 @@ function boss.attack(dt,pEnn)
         end
       end
     end
-
+   -- quand il atk il pause 
     if pEnn.timer > boss.timer / 3 then
       pEnn.state = myGame.StateIA.WALK
       pEnn.timer = 0
@@ -291,9 +295,7 @@ function boss.damage(dt,pEnn)
       pEnn.timer = 0
       return false
     end
-    
-    
-
+    -- pause apres degat
     if pEnn.timer > boss.timer * 0.5 then
       pEnn.state = myGame.StateIA.WALK
       pEnn.timer = 0
@@ -302,16 +304,20 @@ function boss.damage(dt,pEnn)
       pEnn.atkDist = false
     end
 end
-
+-- vrille du boss
 function boss.TransisionPhase(dt,pEnn)
+  -- position du pentacle
   pEnn.x = 13.5 * myGame.Map.MapWIDTH
   pEnn.y = 12.5 * myGame.Map.MapHEIGHT
+  -- invunerable
   pEnn.noDamage = true
   pEnn.timer = pEnn.timer + dt
   boss.timerTransition = boss.timerTransition + dt
+  -- envoie pewpew toute les 0.05dt
   if pEnn.timer > 0.05 then
     myGame.mySon.playEffect("BossHit")
-    local angle = math.rad(love.math.random(0,360))
+    -- angle aleatoire autour de lui 
+  local angle = math.rad(love.math.random(0,360))
     local shoot = {
       startX = pEnn.x + math.cos(angle) * boss.oX * 2,
       startY = pEnn.y + math.sin(angle) * boss.oY * 2 ,
@@ -325,7 +331,7 @@ function boss.TransisionPhase(dt,pEnn)
     table.insert(boss.LstShoot,shoot)
     pEnn.timer = 0
   end
-
+  -- retour au mode calme
   if boss.timerTransition > boss.timerTransitionEnd then
     pEnn.state = myGame.StateIA.WALK
     pEnn.timer = 0

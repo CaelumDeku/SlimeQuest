@@ -75,6 +75,7 @@ game.dtSpeed = 5
 game.mapLoad = ""
 game.mapLoadText = ""
 -----------------------------------------------------------------------------------------
+-- machine à état
 game.StateIA = {
   STATE = "state",
   WALK = "walk",
@@ -106,8 +107,6 @@ function game.load()
   game.miniboss.load()
   game.boss.load()
   game.pnj.load()
-  -- enemy
- -- game.enemy.new(1,16*32,6*32,6*32,10*32)
  game.dialogueManager.load()
 end
 -----------------------------------------------------------------------------------------
@@ -120,19 +119,21 @@ function game.draw()
    love.graphics.draw(endubarre,largeur*0.5,0)
    game.life.draw(game.Map)
    game.energy.draw(game.Map)
-
+   -- teleportation 
    for i , TpD in ipairs(game.TpDirection) do
     if TpD.actif == true then
       love.graphics.setColor(255, 255, 255, 50)
       love.graphics.draw(TpD.pic,TpD.x,TpD.y,0,1,1,TpD.pic:getWidth() * 0.5,TpD.pic:getHeight() * 0.5)
     end
   end
+  --affichage de mes rectangle pour configurer les evenements
   game.evenement.draw()
 end
 -----------------------------------------------------------------------------------------
 ---------------------------------Générateur de Map---------------------------------------
 -----------------------------------------------------------------------------------------
 function game.drawMAP(pMap,pName)
+  -- type object dans les tuiles de map 
   local c,l
    for line = 1, #pMap.layers do
       if pMap.layers[line].type == "tilelayer" then
@@ -294,6 +295,7 @@ function game.collision(pX,pY,Ox,Oy,pMap)
   local c = math.floor(pX / pMap.tilewidth) + 1 -- 262 / 32 = c
   local l = math.floor(pY / pMap.tileheight)
   for index , Layers in ipairs(pMap.layers) do
+    -- parcours des layer pour avoir l'id de colission ou non 
     if Layers.type == "tilelayer" then
       local i = l * pMap.tileheight - (pMap.tileheight - c)
       local id = Layers.data[i]
